@@ -1,0 +1,608 @@
+#!/bin/bash
+
+#=================== User Defined parameters ==================
+#define pseudopotentials directory path
+graspa_x_path='nvc_main.x'
+graspa2k_dir=${HOME}/gRASPA2k
+
+#==============================================================
+py_script_path=$graspa2k_dir/pyscript
+#==============================================================
+stty sane
+stty erase ^H
+echo '>===============================================================================<'
+echo '>-                                                                             -<'
+echo '>-                                 gRASPA2k                                   -<'
+echo '>-                                                                             -<'
+echo '>-                              Author: Zhuochen Yu                            -<'
+echo '>-                                                                             -<'
+echo '>-                              Version 1.0 (dev)                              -<'
+echo '>-                                                                             -<'
+echo '>-           Contact me if you have any suggestions: Email: zcyu@pygamd.com    -<'
+echo '>===============================================================================<'
+
+function main_menu (){
+}
+#declare
+declare -A atm
+declare -A atmmass
+#define atomic index with corresponding element
+        atm["1"]="H";atm["2"]="He";atm["3"]="Li";atm["4"]="Be";atm["5"]="B";atm["6"]="C";atm["7"]="N";\
+	atm["8"]="O";atm["9"]="F";atm["10"]="Ne";atm["11"]="Na";atm["12"]="Mg";atm["13"]="Al";atm["14"]="Si";\
+	atm["15"]="P";atm["16"]="S";atm["17"]="Cl";atm["18"]="Ar";atm["19"]="K";atm["20"]="Ca";atm["21"]="Sc";\
+	atm["22"]="Ti";atm["23"]="V";atm["24"]="Cr";atm["25"]="Mn";atm["26"]="Fe";atm["27"]="Co";atm["28"]="Ni";\
+	atm["29"]="Cu";atm["30"]="Zn";atm["31"]="Ga";atm["32"]="Ge";atm["33"]="As";atm["34"]="Se";atm["35"]="Br";\
+	atm["36"]="Kr";atm["37"]="Rb";atm["38"]="Sr";atm["39"]="Y";atm["40"]="Zr";atm["41"]="Nb";atm["42"]="Mo";\
+	atm["43"]="Tc";atm["44"]="Ru";atm["45"]="Rh";atm["46"]="Pd";atm["47"]="Ag";atm["48"]="Cd";atm["49"]="In";\
+	atm["50"]="Sn";atm["51"]="Sb";atm["52"]="Te";atm["53"]="I";atm["54"]="Xe";atm["55"]="Cs";atm["56"]="Ba";\
+	atm["57"]="La";atm["58"]="Ce";atm["59"]="Pr";atm["60"]="Nd";atm["61"]="Pm";atm["62"]="Sm";atm["63"]="Eu";\
+	atm["64"]="Gd";atm["65"]="Tb";atm["66"]="Dy";atm["67"]="Ho";atm["68"]="Er";atm["69"]="Tm";atm["70"]="Yb";\
+	atm["71"]="Lu";atm["72"]="Hf";atm["73"]="Ta";atm["74"]="W";atm["75"]="Re";atm["76"]="Os";atm["77"]="Ir";\
+	atm["78"]="Pt";atm["79"]="Au";atm["80"]="Hg";atm["81"]="Tl";atm["82"]="Pb";atm["83"]="Bi";atm["84"]="Po";\
+	atm["85"]="At";atm["86"]="Rn"
+
+#define atomic mass (amu), obtained from https://ptable.com/#%E6%80%A7%E8%B4%A8
+        atmmass["1"]="1.008";atmmass["2"]="4.0026";atmmass["3"]="6.94";atmmass["4"]="9.0122";atmmass["5"]="10.81";atmmass["6"]="12.011";atmmass["7"]="14.007";\
+	atmmass["8"]="15.999";atmmass["9"]="18.998";atmmass["10"]="20.180";atmmass["11"]="22.990";atmmass["12"]="24.305";atmmass["13"]="26.982";atmmass["14"]="28.085";\
+	atmmass["15"]="30.974";atmmass["16"]="32.06";atmmass["17"]="35.45";atmmass["18"]="39.948";atmmass["19"]="39.098";atmmass["20"]="40.078";atmmass["21"]="44.956";\
+	atmmass["22"]="47.867";atmmass["23"]="50.942";atmmass["24"]="51.996";atmmass["25"]="54.938";atmmass["26"]="55.845";atmmass["27"]="58.933";atmmass["28"]="58.693";\
+	atmmass["29"]="63.546";atmmass["30"]="65.38";atmmass["31"]="69.723";atmmass["32"]="72.630";atmmass["33"]="74.922";atmmass["34"]="78.971";atmmass["35"]="79.904";\
+	atmmass["36"]="83.798";atmmass["37"]="85.468";atmmass["38"]="87.62";atmmass["39"]="88.906";atmmass["40"]="91.244";atmmass["41"]="92.906";atmmass["42"]="95.95";\
+	atmmass["43"]="98";atmmass["44"]="101.07";atmmass["45"]="102.91";atmmass["46"]="106.42";atmmass["47"]="107.87";atmmass["48"]="112.41";atmmass["49"]="114.82";\
+	atmmass["50"]="118.71";atmmass["51"]="121.76";atmmass["52"]="127.60";atmmass["53"]="126.90";atmmass["54"]="131.29";atmmass["55"]="132.91";atmmass["56"]="137.33";\
+	atmmass["57"]="138.91";atmmass["58"]="140.12";atmmass["59"]="140.91";atmmass["60"]="144.24";atmmass["61"]="145";atmmass["62"]="150.36";atmmass["63"]="151.96";\
+	atmmass["64"]="157.25";atmmass["65"]="158.93";atmmass["66"]="162.50";atmmass["67"]="164.93";atmmass["68"]="167.26";atmmass["69"]="168.93";atmmass["70"]="173.05";\
+	atmmass["71"]="174.97";atmmass["72"]="178.49";atmmass["73"]="180.95";atmmass["74"]="183.84";atmmass["75"]="186.21";atmmass["76"]="190.23";atmmass["77"]="192.22";\
+	atmmass["78"]="195.08";atmmass["79"]="196.97";atmmass["80"]="200.59";atmmass["81"]="204.38";atmmass["82"]="207.2";atmmass["83"]="208.98";atmmass["84"]="209";\
+	atmmass["85"]="210";atmmass["86"]="222"	
+#echo ${atmmass["8"]}
+
+function calculate_supercell (){
+    cif_file_name=$1
+    CutoffVDW=$2
+CutOffVDW=$CutoffVDW
+a=$(grep '_cell_length_a' $cif_file_name|awk '{print $2}'|sed 's/\r//g')
+b=$(grep '_cell_length_b' $cif_file_name|awk '{print $2}'|sed 's/\r//g')
+c=$(grep '_cell_length_c' $cif_file_name|awk '{print $2}'|sed 's/\r//g')
+UC_alpha=$(grep '_cell_angle_alpha' $cif_file_name|awk '{print $2}'|sed 's/\r//g')
+UC_beta=$(grep '_cell_angle_beta' $cif_file_name|awk '{print $2}'|sed 's/\r//g')
+UC_gamma=$(grep '_cell_angle_gamma' $cif_file_name|awk '{print $2}'|sed 's/\r//g')
+alpha=$(echo "scale=10; $UC_alpha * 3.141592653589793 / 180" | bc -l)
+beta=$(echo "scale=10; $UC_beta * 3.141592653589793 / 180" | bc -l)
+gamma=$(echo "scale=10; $UC_gamma * 3.141592653589793 / 180" | bc -l)
+sin_alpha=$(echo "scale=10; s($alpha)" | bc -l)
+sin_beta=$(echo "scale=10; s($beta)" | bc -l)
+sin_gamma=$(echo "scale=10; s($gamma)" | bc -l)
+cos_alpha=$(echo "scale=10; c($alpha)" | bc -l)
+cos_beta=$(echo "scale=10; c($beta)" | bc -l)
+cos_gamma=$(echo "scale=10; c($gamma)" | bc -l)
+Volume=$(echo "scale=10; $a * $b * $c * sqrt(1 + 2 * $cos_alpha * $cos_beta * $cos_gamma - $cos_alpha^2 - $cos_beta^2 - $cos_gamma^2)" | bc -l)
+base_area_x=$(echo "scale=10; $b * $c * $sin_alpha" | bc -l)
+base_area_y=$(echo "scale=10; $a * $c * $sin_beta" | bc -l)
+base_area_z=$(echo "scale=10; $a * $b * $sin_gamma" | bc -l)
+perpendicular_length_x=$(echo "scale=10; $Volume / $base_area_x" | bc -l)
+perpendicular_length_y=$(echo "scale=10; $Volume / $base_area_y" | bc -l)
+perpendicular_length_z=$(echo "scale=10; $Volume / $base_area_z" | bc -l)
+unit_cell_x=$(echo "scale=0; (2 * $CutoffVDW / $perpendicular_length_x / 1 ) + 1" | bc)
+unit_cell_y=$(echo "scale=0; (2 * $CutoffVDW / $perpendicular_length_y / 1 ) + 1" | bc)
+unit_cell_z=$(echo "scale=0; (2 * $CutoffVDW / $perpendicular_length_z / 1 ) + 1" | bc)
+echo "$unit_cell_x $unit_cell_y $unit_cell_z"
+
+}
+
+function 101_generate_graspa_input_file () {
+    read -e cif_file_name
+    if [ -z "$cif_file_name" ]; then
+        cif_file_name=$(ls | grep -m 1 '\.cif$')
+        if [ -z "$cif_file_name" ]; then
+            echo "No CIF file found in the current directory."
+            exit 1
+        fi
+    fi
+    read -e Temp_Pre
+    if [ -z "$Temp_Pre" ]; then
+        Temp_Pre='298,100000'
+    fi							    
+    IFS=',' read -e -r Temperature Pressure <<< "$Temp_Pre"
+
+    # CutoffVDW
+    read -e CutoffVDW
+    if [ -z "$CutoffVDW" ]; then
+        CutoffVDW=12.5
+    fi
+
+    # Calculate supercell number
+    supercell=$(calculate_supercell $cif_file_name $CutoffVDW)
+
+    # Components
+    read -e molecules
+    IFS=',' read -r -a molecule_array <<< "$molecules"
+
+    if [ ${#molecule_array[@]} -eq 0 ]; then
+        echo "No components provided."
+        exit 1
+    fi
+
+    # Generate simulation.input
+    if [ -f simulation.input ]; then
+        mv simulation.input simulation.input.bak
+    fi
+
+    cat <<EOF >simulation.input
+NumberOfInitializationCycles 20000
+NumberOfEquilibrationCycles  0
+NumberOfProductionCycles     20000
+
+UseMaxStep  no
+MaxStepPerCycle 1
+
+UseChargesFromCIFFile yes
+
+RestartFile no
+RandomSeed  0
+
+NumberOfTrialPositions 10
+NumberOfTrialOrientations 10
+
+NumberOfBlocks 1
+AdsorbateAllocateSpace 10240
+NumberOfSimulations 1
+SingleSimulation yes
+
+InputFileType cif
+FrameworkName ${cif_file_name%.cif}
+UnitCells 0 $supercell
+
+ChargeMethod Ewald
+Temperature $Temperature
+Pressure $Pressure
+
+OverlapCriteria 1e5
+CutOffVDW $CutoffVDW
+CutOffCoulomb $CutoffVDW
+EwaldPrecision 1e-6
+
+EOF
+
+    # If only one component, no need for mol fractions
+    if [ ${#molecule_array[@]} -eq 1 ]; then
+        component1=${molecule_array[0]}
+        cat <<EOF >>simulation.input
+Component 0 MoleculeName $component1
+IdealGasRosenbluthWeight 1.0
+FugacityCoefficient PR-EOS
+TranslationProbability 1.0
+ReinsertionProbability 1.0
+SwapProbability 1.0
+CreateNumberOfMolecules 0
+EOF
+
+        if [ "$component" != "ch4_1" ] && [ "$component" != "he_1" ]; then
+            echo "RotationProbability 1.0" >>simulation.input
+        fi
+        echo $'\n' >>simulation.input
+
+    else
+        # If more than one component, ask for mol fractions
+        read -e mol_fractions
+        IFS=',' read -r -a mol_fraction_array <<< "$mol_fractions"
+
+        if [ ${#mol_fraction_array[@]} -ne ${#molecule_array[@]} ]; then
+            echo "The number of mol fractions does not match the number of components."
+            exit 1
+        fi
+
+        for i in "${!molecule_array[@]}"; do
+            component=${molecule_array[$i]}
+            mol_fraction=${mol_fraction_array[$i]}
+            cat <<EOF >>simulation.input
+Component $i MoleculeName $component
+MolFraction              $mol_fraction
+IdealGasRosenbluthWeight 1.0
+FugacityCoefficient      PR-EOS
+TranslationProbability   1.0
+ReinsertionProbability   1.0
+SwapProbability          1.0
+IdentityChangeProbability 1.0
+CreateNumberOfMolecules  0
+EOF
+
+            if [ "$component" != "ch4_1" ] && [ "$component" != "he_1" ]; then
+                echo "RotationProbability 1.0" >>simulation.input
+            fi
+            echo $'\n' >>simulation.input
+
+        done
+    fi
+
+    echo "simulation.input for "$cif_file_name" is generated."
+}
+
+############################################
+function 102_modify_atom_label () {
+echo "Warning! This function will modify .cif forcefield_mixing_rule.def & pseudo_atoms.def files."
+echo "This function will add a string behind atom label ending with a number."
+echo "Now, enter a string that you are willing to add.For eg., opls"
+read -e string
+echo "OK,$string will be added."
+echo "Now enter a number. How many lines that counting from the bottom up are you unwilling to modify?"
+read -e number
+#modify .cif
+cif_file=$(ls | grep .cif)
+found_section=0
+sections=()  # 用来存储所有段落
+section=""
+
+# 逐行读取 .cif 文件
+while IFS= read -r line; do
+    # 如果碰到 loop_ 则表示新段落的开始
+    if [[ $line == loop_* ]]; then
+        # 如果已经有内容，保存当前段落到数组中
+        if [[ -n "$section" ]]; then
+            sections+=("$section")
+        fi
+        
+        # 检查上一段是否包含 _atom_site_charge
+        if echo "$section" | grep -q "_atom_site_charge"; then
+            found_section=1
+        fi
+        
+        # 开始新段落
+        section="$line"
+    else
+        # 将当前行加入到段落中
+        section+=$'\n'"$line"
+    fi
+done < "$cif_file"
+
+# 将最后一个段落加入数组
+if [[ -n "$section" ]]; then
+    sections+=("$section")
+fi
+
+# 打印所有段落
+for ((i=0; i<${#sections[@]}; i++)); do
+#    echo "Section $((i+1)):"
+#    echo "${sections[i]}"
+#    echo "-----"
+    
+    # 如果找到包含 _atom_site_charge 的段落，标记出来
+    if echo "${sections[i]}" | grep  "_atom_site_charge"; then
+#        echo "Found section with _atom_site_charge:"
+#        echo "${sections[i]}"
+IFS=$'\n' read -rd '' -a lines <<< "${sections[i]}"          
+# 找到 _atom_site_charge 所在行并从下一行开始处理
+for ((j=0; j<${#lines[@]}; j++)); do
+    if [[ "${lines[j]}" == *_atom_site_charge* ]]; then
+# 从下一行开始处理
+         for ((k=j+1; k<${#lines[@]}; k++)); do
+# 拆分当前行，第一个元素后面添加 -$string
+             IFS=' ' read -r first rest <<< "${lines[k]}"
+             lines[k]="$first-$string $rest"
+         done
+         break
+    fi
+done
+
+# 将处理后的行重新组合为段落
+sections[i]=$(printf "%s\n" "${lines[@]}")
+#echo "New section"
+#echo "${sections[i]}"
+
+
+
+    fi
+done
+> "$cif_file"  # 清空文件内容
+for section in "${sections[@]}"; do
+echo "$section" | tr -d '\r' >> "$cif_file"    
+done
+
+echo "CIF file updated successfully."
+#####################################
+#Modify forcefield_mixing_rules
+
+ff_file='force_field_mixing_rules.def'
+
+# 读取第六行内容，并将其存储为 line_number
+line_number=$(sed -n '6p' "$ff_file" | tr -d '[:space:]')
+echo "line_number: $line_number"
+echo "number: $number"
+
+# 确保 line_number 是有效的数字
+if ! [[ "$line_number" =~ ^[0-9]+$ ]]; then
+	    echo "Error: line_number is not a valid number."
+	        exit 1
+fi
+# 计算结束行号
+start_line=8
+end_line=$((start_line + line_number - number - 1))
+
+# 创建一个临时文件来存储修改后的内容
+temp_file=$(mktemp)
+
+# 逐行读取文件并处理特定行
+line_counter=1
+while IFS= read -r line; do
+    # 如果当前行号在处理范围内，修改该行
+    if [[ $line_counter -ge $start_line && $line_counter -le $end_line ]]; then
+        # 处理当前行第一个元素，并添加后缀
+        IFS=' ' read -r first rest <<< "$line"
+        echo "$first-$string $rest" >> "$temp_file"
+    else
+        # 如果不在范围内，原样输出
+        echo "$line" >> "$temp_file"
+    fi
+    ((line_counter++))
+done < "$ff_file"
+
+# 将临时文件内容写回到原始文件中
+mv "$temp_file" "$ff_file"
+
+echo "force_field_mixing_rules.def updated successfully."
+######
+#pseudo_atoms.def
+
+psatm_file='pseudo_atoms.def'
+# 
+line_number=$(sed -n '2p' "$psatm_file" | tr -d '[:space:]')
+echo "line_number: $line_number"
+echo "number: $number"
+
+# 确保 line_number 是有效的数字
+if ! [[ "$line_number" =~ ^[0-9]+$ ]]; then
+            echo "Error: line_number is not a valid number."
+                exit 1
+fi
+# 计算结束行号
+start_line=4
+end_line=$((start_line + line_number - number - 1))
+
+# 创建一个临时文件来存储修改后的内容
+temp_file=$(mktemp)
+
+# 逐行读取文件并处理特定行
+line_counter=1
+while IFS= read -r line; do
+    # 如果当前行号在处理范围内，修改该行
+    if [[ $line_counter -ge $start_line && $line_counter -le $end_line ]]; then
+        # 处理当前行第一个元素，并添加后缀
+        IFS=' ' read -r first rest <<< "$line"
+        echo "$first-$string $rest" >> "$temp_file"
+    else
+        # 如果不在范围内，原样输出
+        echo "$line" >> "$temp_file"
+    fi
+    ((line_counter++))
+done < "$psatm_file"
+
+# 将临时文件内容写回到原始文件中
+mv "$temp_file" "$psatm_file"
+echo "pseudo_atoms.def updated successfully."
+}
+
+
+function 104_cal_supercell(){
+echo "Enter cif file path."
+#echo "Note: If you press Enter directly, the script will auto search the cif file in current dir."
+read -e cif_path
+
+echo "Enter cutoff"
+read cutoff
+supercell=$(calculate_supercell $cif_path $cutoff)
+echo "Supercell number is automaticly calculated."
+echo "$supercell"
+
+}
+
+function 105_generate_raspa_input_file () {
+    read -e cif_file_name
+    if [ -z "$cif_file_name" ]; then
+        cif_file_name=$(ls | grep -m 1 '\.cif$')
+        if [ -z "$cif_file_name" ]; then
+            echo "No CIF file found in the current directory."
+            exit 1
+        fi
+    fi
+    read -e Temp_Pre
+    if [ -z "$Temp_Pre" ]; then
+        Temp_Pre='298,100000'
+    fi							    
+    IFS=',' read -e -r Temperature Pressure <<< "$Temp_Pre"
+
+    # CutoffVDW
+    read -e CutoffVDW
+    if [ -z "$CutoffVDW" ]; then
+        CutoffVDW=12.5
+    fi
+
+    # Calculate supercell number
+    supercell=$(calculate_supercell $cif_file_name $CutoffVDW)
+
+    # Components
+    read -e molecules
+    IFS=',' read -r -a molecule_array <<< "$molecules"
+
+    if [ ${#molecule_array[@]} -eq 0 ]; then
+        echo "No components provided."
+        exit 1
+    fi
+
+    # Generate simulation.input
+    if [ -f simulation.input ]; then
+        mv simulation.input simulation.input.bak
+    fi
+
+    cat <<EOF >simulation.input
+
+SimulationType MonteCarlo
+NumberOfCycles 50000
+NumberOfInitializationCycles 5000
+PrintEvery 1000
+Forcefield Local
+
+Framework 0
+FrameworkName ${cif_file_name%.cif}
+UnitCells $supercell
+HeliumVoidFraction 0.81
+ExternalTemperature $Temperature
+ExternalPressure $Pressure
+
+EOF
+
+    # If only one component, no need for mol fractions
+    if [ ${#molecule_array[@]} -eq 1 ]; then
+        component1=${molecule_array[0]}
+        cat <<EOF >>simulation.input
+Component 0 MoleculeName $component1
+MoleculeDefinition Local
+MolFraction 1
+TranslationProbability 0.5
+RegrowProbability 0.5
+IdentityChangeProbability 1.0
+NumberOfIdentityChanges 2
+IdentityChangesList 0 1
+SwapProbability 1.0
+CreateNumberOfMolecules 0
+
+EOF
+    else
+        # If more than one component, ask for mol fractions
+        read -e mol_fractions
+        IFS=',' read -r -a mol_fraction_array <<< "$mol_fractions"
+
+        if [ ${#mol_fraction_array[@]} -ne ${#molecule_array[@]} ]; then
+            echo "The number of mol fractions does not match the number of components."
+            exit 1
+        fi
+
+        for i in "${!molecule_array[@]}"; do
+            component=${molecule_array[$i]}
+            mol_fraction=${mol_fraction_array[$i]}
+            cat <<EOF >>simulation.input
+Component $i MoleculeName $component
+MoleculeDefinition Local
+MolFraction $mol_fraction
+TranslationProbability 0.5
+RegrowProbability 0.5
+IdentityChangeProbability 1.0
+NumberOfIdentityChanges 2
+IdentityChangesList 0 1
+SwapProbability 1.0
+CreateNumberOfMolecules 0
+
+EOF
+        done
+    fi
+
+    echo "simulation.input for "$cif_file_name" is generated."
+}
+
+function 203_extract_isotherm(){
+dirs=$(ls|grep 'iso_')
+if [ -d 'isotherm_data.txt' ];then
+rm isotherm_data.txt
+fi
+touch isotherm_data.txt
+echo "Pressure/Pa    Loadings(mol/kg)">>isotherm_data.txt
+for dir in $dirs;do
+   content=$(cat $dir/output.txt |grep -A 20 'mol/kg'|grep Overall|tail -n 1)
+     loading=$(echo "$content" | grep -oP 'Average: \K[0-9.]+')
+     echo "${dir//iso_/}    $loading">>isotherm_data.txt
+done
+ sort -n -k1,1 isotherm_data.txt > sorted_data.txt
+ mv sorted_data.txt isotherm_data.txt
+
+}
+
+
+function mass2number(){
+
+for key in "${!atmmass[@]}"; do
+if [[ "${atmmass[$key]}" == "$mass_value" ]]; then
+element=${atm[$key]}
+echo "$key"
+break
+fi
+done
+}
+
+function 204_lmp_data2cif() {
+    echo "Directly pressing enter will automatically process ./Movies/System_0"
+    echo "Enter 'iso_' will process isotherm data to cif files."
+    read -e option
+
+    if [ -z "$option" ]; then
+        path="./Moives/System_0/"
+    elif [ "$option" == "iso_" ]; then
+        dirs=$(ls | grep "iso_")
+        for dir in $dirs; do
+            python $py_script_path/lmp2cif.py "$dir/Movies/System_0"
+	    echo "$dir has been processed."
+        done
+        return
+    else
+        echo "Invalid option: $option"
+        return 1
+    fi
+
+    python $py_script_path/lmp2cif.py "$path"
+}
+
+function 205_DDEC_xyz2cif() {
+   echo "Convert DDEC6_    to charged cif file."
+   echo "Need to install pymatgen, numpy and ase first."
+   echo "--------------------------------------------"
+   echo "Enter original cif name."
+   read -e option1
+   echo "Enter output cif name"
+   read -e option2
+   python $py_script_path/charge_xyz2cif.py DDEC6_even_tempered_net_atomic_charges.xyz $option1 $option2
+}
+
+# Main
+main_menu
+
+echo "Please select an option:"
+read -e option
+
+case $option in
+    101)
+        101_generate_graspa_input_file
+        ;;
+    102)
+        102_modify_atom_label
+        ;;
+    103)
+        echo "Function 103 not implemented yet."
+        ;;
+    104)
+        104_cal_supercell
+        ;;
+    105)
+        105_generate_raspa_input_file
+        ;;
+    201)
+        echo "Function 201 not implemented yet."
+        ;;
+    202)
+        echo "Function 202 not implemented yet."
+        ;;
+    203)
+        203_extract_isotherm
+	echo "isotherm data is extracted to isotherm_data.txt"
+        ;;
+    204)
+       204_lmp_data2cif
+       echo "Done."
+       ;;
+    205)
+       205_DDEC_xyz2cif
+       echo "Done."
+       ;;       
+    *)
+        echo "Invalid option selected."
+        ;;
+esac
+
+

@@ -209,10 +209,12 @@ ReinsertionProbability 1.0
 SwapProbability 1.0
 CreateNumberOfMolecules 0
 EOF
-        if [ "$component" != "ch4_1" ] && [ "$component" != "n2_1" ]; then
+
+        if [ "$component" != "ch4_1" ] && [ "$component" != "he_1" ]; then
             echo "RotationProbability 1.0" >>simulation.input
         fi
-        echo "\n" >>simulation.input
+        echo $'\n' >>simulation.input
+
     else
         # If more than one component, ask for mol fractions
         echo "Enter mol fractions for the components in the same order as entered, separated by commas."
@@ -228,7 +230,6 @@ EOF
         for i in "${!molecule_array[@]}"; do
             component=${molecule_array[$i]}
             mol_fraction=${mol_fraction_array[$i]}
-
             cat <<EOF >>simulation.input
 Component $i MoleculeName $component
 MolFraction              $mol_fraction
@@ -240,11 +241,13 @@ SwapProbability          1.0
 IdentityChangeProbability 1.0
 CreateNumberOfMolecules  0
 EOF
-            if [ "$component" != "ch4_1" ] && [ "$component" != "n2_1" ]; then
+
+            if [ "$component" != "ch4_1" ] && [ "$component" != "he_1" ]; then
                 echo "RotationProbability 1.0" >>simulation.input
             fi
-            echo "\n" >>simulation.input
-done
+            echo $'\n' >>simulation.input
+
+        done
     fi
 
     echo "simulation.input is generated."

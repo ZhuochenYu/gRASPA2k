@@ -28,7 +28,7 @@ function main_menu (){
 	echo '============================== Pre-Processing Section ==========================' 
 	echo '  101) Generate gRASPA Input File           102) Atom Label Modify    '  
 	echo '  103) Generate Adsorption Isotherm Dirs    104) Calculate Supercell & Modify Inputs'  
-	echo '  105) Generate PASPA Input File'
+	echo '  105) Generate PASPA Input File            106) Generate gRASPA Input File for Henry'
 	echo '============================= Post-Processing Section =========================='
 	echo '  201) Extract Information from output.txt'
 	echo '  202) Calculate Excess Adsorption Amount'
@@ -210,9 +210,10 @@ SwapProbability 1.0
 CreateNumberOfMolecules 0
 EOF
 
-        if [ "$component" != "ch4_1" ] && [ "$component" != "he_1" ]; then
+        if [[ ! "$component" =~ 1$ ]]; then
             echo "RotationProbability 1.0" >>simulation.input
         fi
+
         echo $'\n' >>simulation.input
 
     else
@@ -242,9 +243,10 @@ IdentityChangeProbability 1.0
 CreateNumberOfMolecules  0
 EOF
 
-            if [ "$component" != "ch4_1" ] && [ "$component" != "he_1" ]; then
+            if [[ ! "$component" =~ 1$ ]]; then
                 echo "RotationProbability 1.0" >>simulation.input
             fi
+
             echo $'\n' >>simulation.input
 
         done
@@ -431,7 +433,7 @@ echo "$supercell"
 }
 
 function 105_generate_raspa_input_file () {
-    echo "Enter the cif file name for gRASPA. "
+    echo "Enter the cif file name for RASPA. "
     echo ""
     echo "Pressing Enter directly will automatically search for cif file"
     read -e cif_file_name
@@ -549,6 +551,116 @@ EOF
     echo "simulation.input is generated."
 }
 
+function 106_generate_graspa_input_file_henry () {
+    echo "Enter the cif file name for gRASPA. "
+    echo ""
+    echo "Pressing Enter directly will automatically search for cif file"
+    read -e cif_file_name
+    if [ -z "$cif_file_name" ]; then
+        cif_file_name=$(ls | grep -m 1 '\.cif$')
+        if [ -z "$cif_file_name" ]; then
+            echo "No CIF file found in the current directory."
+            exit 1
+        fi
+        echo "Using found CIF file: $cif_file_name"
+    fi
+    echo ""
+    echo "Generating gRASPA input file with $cif_file_name"
+    echo ""
+    echo "Enter Temperature and Pressure, Default: 298,1e5"
+    read -e Temp_Pre
+    if [ -z "$Temp_Pre" ]; then
+        Temp_Pre='298,100000'
+    fi							    
+    IFS=',' read -e -r Temperature Pressure <<< "$Temp_Pre"
+    echo "$cif_file_name  $Temperature  $Pressure"
+
+    # CutoffVDW
+    echo "Enter CutoffVDW, Default: 12.5"
+    echo "NOTE: CutoffColumb is set the same as CutoffVDW."
+    read -e CutoffVDW
+    if [ -z "$CutoffVDW" ]; then
+        CutoffVDW=12.5
+    fi
+
+    # Calculate supercell number
+    supercell=$(calculate_supercell $cif_file_name $CutoffVDW)
+    echo "Supercell number is automatically calculated."
+    echo "$supercell"
+
+    # Components
+    echo "Enter adsorbate(e.g., CH4)."
+    read -e molecules
+    IFS=',' read -r -a molecule_array <<< "$molecules"
+
+    if [ ${#molecule_array[@]} -eq 0 ]; then
+        echo "No components provided."
+        exit 1
+    fi
+
+    # Generate simulation.input
+    if [ -f simulation.input ]; then
+        mv simulation.input simulation.input.bak
+    fi
+
+    cat <<EOF >simulation.input
+NumberOfInitializationCycles 0
+NumberOfEquilibrationCycles  0
+NumberOfProductionCycles     100000
+
+UseMaxStep  no
+MaxStepPerCycle 1
+
+UseChargesFromCIFFile yes
+
+RestartFile no
+RandomSeed  0
+
+NumberOfTrialPositions 10
+NumberOfTrialOrientations 10
+
+NumberOfBlocks 1
+AdsorbateAllocateSpace 10240
+NumberOfSimulations 1
+SingleSimulation yes
+
+InputFileType cif
+FrameworkName ${cif_file_name%.cif}
+UnitCells 0 $supercell
+
+ChargeMethod Ewald
+Temperature $Temperature
+Pressure $Pressure
+
+OverlapCriteria 1e5
+CutOffVDW $CutoffVDW
+CutOffCoulomb $CutoffVDW
+EwaldPrecision 1e-6
+
+EOF
+
+    # If only one component, no need for mol fractions
+    if [ ${#molecule_array[@]} -eq 1 ]; then
+        component1=${molecule_array[0]}
+        cat <<EOF >>simulation.input
+Component 0 MoleculeName $component1
+IdealGasRosenbluthWeight 1.0
+FugacityCoefficient      1.0
+WidomProbability         1.0
+CreateNumberOfMolecules  0
+EOF
+
+        if [[ ! "$component" =~ 1$ ]]; then
+            echo "RotationProbability 1.0" >>simulation.input
+        fi
+
+        echo $'\n' >>simulation.input
+    
+    fi
+
+    echo "simulation.input is generated."
+}
+
 function 203_extract_isotherm(){
 dirs=$(ls|grep 'iso_')
 if [ -d 'isotherm_data.txt' ];then
@@ -632,6 +744,9 @@ case $option in
         ;;
     105)
         105_generate_raspa_input_file
+        ;;
+    106)
+        106_generate_graspa_input_file_henry
         ;;
     201)
         echo "Function 201 not implemented yet."

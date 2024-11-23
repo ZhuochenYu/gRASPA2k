@@ -650,10 +650,6 @@ WidomProbability         1.0
 CreateNumberOfMolecules  0
 EOF
 
-        if [[ ! "$component" =~ 1$ ]]; then
-            echo "RotationProbability 1.0" >>simulation.input
-        fi
-
         echo $'\n' >>simulation.input
     
     fi
